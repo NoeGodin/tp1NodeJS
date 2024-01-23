@@ -1,1 +1,14 @@
-{"message" : "Bonjour à tous"}
+[
+  {
+    "id": "3b7a7f54-6aef-436b-b850-291e3f517e6a",
+    "nom": "bonjour",
+    "don": "oui",
+    "date": "20240123-17:31:50"
+  },
+  {
+    "id": "567aeb68-585c-4c6e-b713-78aa5c1a7da5",
+    "nom": "bonjour",
+    "don": "oui",
+    "date": "20240123-17:31:50"
+  }
+]
