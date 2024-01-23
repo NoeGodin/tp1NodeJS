@@ -39,7 +39,12 @@ export async function findBlocks() {
  * @return {Promise<Block[]>}
  */
 export async function findBlock(partialBlock) {
-
+    const blocks = await findBlocks()
+    const block = blocks.find(block => block.id === partialBlock.id)
+    if (!block) {
+        throw new NotFoundError()
+    }
+    return block
 }
 
 /**
@@ -47,7 +52,8 @@ export async function findBlock(partialBlock) {
  * @return {Promise<Block|null>}
  */
 export async function findLastBlock() {
-    // A coder
+    const blocks = await findBlocks()
+    return blocks[blocks.length - 1] || null
 }
 
 /**
@@ -56,11 +62,19 @@ export async function findLastBlock() {
  * @return {Promise<Block[]>}
  */
 export async function createBlock(contenu) {
+    const lastBlock = await findLastBlock();
+    const previousBlockString = JSON.stringify(lastBlock);
+    const previousBlockHash = createHash('sha256').update(previousBlockString).digest('hex');
+
     const id = uuidv4()
     const nom = contenu.nom
     const don = contenu.don
     const date = getDate()
-    const json = {id,nom,don,date};
+    let hash = null;
+    if (lastBlock!=null) {
+        hash = createHash('sha256').update(previousBlockHash + id + contenu.nom + contenu.don + date).digest('hex')
+    }
+    const json = {id,nom,don,date,hash};
     console.log(json)
     let jsonArr = await findBlocks()
     jsonArr.push(json)
