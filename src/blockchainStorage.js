@@ -1,6 +1,5 @@
 import {readFile, writeFile} from 'node:fs/promises'
-import {getDate, monSecret} from "./divers.js";
-import {NotFoundError} from "./errors.js";
+import {getDate} from "./divers.js";
 import {createHash} from 'node:crypto'
 import { v4 as uuidv4 } from 'uuid';
 
@@ -35,16 +34,38 @@ export async function findBlocks() {
 
 /**
  * Trouve un block à partir de son id
- * @param partialBlock
+ * @param id
  * @return {Promise<Block[]>}
  */
-export async function findBlock(partialBlock) {
+export async function findBlock(id) {
     const blocks = await findBlocks()
-    const block = blocks.find(block => block.id === partialBlock.id)
+    const block = blocks.find(block => block.id === id)
     if (!block) {
-        throw new NotFoundError()
+        return JSON.stringify({erreur : "Block indisponible",etat:"non fiable"});
     }
     return block
+}
+
+/**
+ * Verifie que chaque block a bien le bon hachage
+ * @return {Promise<Block[]>}
+ */
+export async function verifBlocks() {
+    const blocks = await findBlocks();
+    let chaineValide = true;
+
+    blocks.forEach((block, i) => {
+        if (i > 0) {
+            const blockPrecedent = blocks[i - 1];
+            const previousBlockString = JSON.stringify(blockPrecedent);
+
+            const hashAObtenir = createHash('sha256').update(previousBlockString).digest('hex')
+            if (hashAObtenir !== block.hash) {
+                chaineValide = false;
+            }
+        }
+    });
+    return JSON.stringify(chaineValide);
 }
 
 /**
@@ -64,7 +85,6 @@ export async function findLastBlock() {
 export async function createBlock(contenu) {
     const lastBlock = await findLastBlock();
     const previousBlockString = JSON.stringify(lastBlock);
-    const previousBlockHash = createHash('sha256').update(previousBlockString).digest('hex');
 
     const id = uuidv4()
     const nom = contenu.nom
@@ -72,7 +92,7 @@ export async function createBlock(contenu) {
     const date = getDate()
     let hash = null;
     if (lastBlock!=null) {
-        hash = createHash('sha256').update(previousBlockHash + id + contenu.nom + contenu.don + date).digest('hex')
+        hash = createHash('sha256').update(previousBlockString).digest('hex')
     }
     const json = {id,nom,don,date,hash};
     console.log(json)
